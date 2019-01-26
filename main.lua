@@ -16,7 +16,6 @@ local modulesToLoad = {
     "color",
     "inspect",
     "geometry",
-    "func",
     "vehicles",
 
     -- game mode modules
@@ -24,8 +23,9 @@ local modulesToLoad = {
     "player",
     "carSpawning",
     "weapons",
-    "commands",
-    "staticEvents",
+    "test",
+    "command",
+    "event",
 }
 
 moduleLoader.loadModules(modulesToLoad)

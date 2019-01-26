@@ -1,6 +1,6 @@
 local carSpawning = {}
-
 local spawnedCars = {}
+carSpawning.waitToWarp = {}
 
 local function deletePlayerVehicles(playerid)
 	if(spawnedCars[playerid] ~= nil) then
@@ -42,6 +42,8 @@ function carSpawning.spawnCar(playerId, car, colors)
 
 	local modelName = string.upper(car or "no vehicle name")
 	local modelId = -1
+
+	--match from beginning
 	for _, vehicle in pairs(vehicles) do
 		if (vehicle:find(modelName) == 1) then
 			modelName = vehicle
@@ -49,6 +51,18 @@ function carSpawning.spawnCar(playerId, car, colors)
 			break
 		end
 	end
+
+	if (modelId == -1) then
+		--match everywhere
+		for _, vehicle in pairs(vehicles) do
+			if (vehicle:find(modelName) ~= nil) then
+				modelName = vehicle
+				modelId = getVehicleModelId(vehicle)
+				break
+			end
+		end
+	end
+
 	if (modelId == -1) then
 		return sendPlayerMsg(playerId, "'" .. modelName .. "' is an invalid vehicle name", color.error)
 	end
@@ -71,24 +85,36 @@ function carSpawning.spawnCar(playerId, car, colors)
 	end
 
 	local x, y, z = getPlayerPos(playerId)
+	local rotation = math.floor(player.getRotation(playerId))
 	deletePlayerVehicles(playerId)
-	local carId = createVehicle(modelId, x, y, z, 0.0, 0.0, 0.0, _colors[1], _colors[2], _colors[3], _colors[4], getPlayerWorld(playerId))
+	local carId = createVehicle(modelId, x, y, z, 0, 0, rotation, _colors[1], _colors[2], _colors[3], _colors[4], getPlayerWorld(playerId))
+	local data = {
+		warpPlayerId = playerId,
+		warpCarId = carId,
+	}
+	table.insert(carSpawning.waitToWarp, data)
 	spawnedCars[playerId] = carId
-	sendPlayerMsg(playerId, modelName .. " spawned with id " .. carId .. " with color " .. _colors[1] .." ".. _colors[2] .." ".. _colors[3] .." ".. _colors[4], color.info)
+	sendPlayerMsg(playerId, modelName .. " spawned with color " .. _colors[1] .." ".. _colors[2] .." ".. _colors[3] .." ".. _colors[4], color.info)
 end
 
 -- setTimer("speedometer", 1000, 0)
 
-moduleLoader.registerModuleUnload("carSpawning", (
+moduleLoader.registerOnLoad("carSpawning",
 	function()
-		-- deleteTimer("speedometer")
+		event.register("onPlayerLeft", carSpawning.removePlayerVehicle)
+	end
+)
+
+moduleLoader.registerOnUnload("carSpawning",
+	function()
+		event.unregister("onPlayerLeft", carSpawning.removePlayerVehicle)
 
 		for spawnerId, carId in pairs(spawnedCars) do
 			if(isVehicle(carId)) then
 				deleteVehicle(carId)
 			end
 		end
-	end)
+	end
 )
 
 return carSpawning

@@ -53,7 +53,7 @@ createDialog()
 -- end
 -- registerEvent("onWeaponsDialogResponse", "onPlayerDialogResponse")
 
-moduleLoader.registerModuleUnload("weapons",
+moduleLoader.registerOnUnload("weapons",
 	function()
 		deleteDialogList(weaponsDialogId)
 		-- unregisterEvent("onWeaponsChat")

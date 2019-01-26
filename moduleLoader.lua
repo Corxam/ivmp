@@ -10,7 +10,7 @@ local unloadedModule = setmetatable({}, {
     __newindex = unloadedModuleWarning
 })
 
-function moduleLoader.loadModule(name)
+local function loadModule(name)
 	_modules[name] = {}
 	local success, module = pcall(require, "modules/" .. name)
 	if (not success) or module == nil then
@@ -24,6 +24,19 @@ function moduleLoader.loadModule(name)
 	return true
 end
 
+function moduleLoader.loadModule(name)
+	if loadModule(name) then
+		local onLoad = _modules[name].onLoad
+		if type(onLoad) == "function" then
+			onLoad()
+		end
+
+		return true
+	end
+
+	return false
+end
+
 function moduleLoader.loadModules(modules)
 	-- predefine globals
 	for _, module in ipairs(modules) do
@@ -31,7 +44,14 @@ function moduleLoader.loadModules(modules)
 	end
 
 	for _, module in ipairs(modules) do
-		moduleLoader.loadModule(module)
+		loadModule(module)
+	end
+
+	for _, module in pairs(_modules) do
+		local onLoad = module.onLoad
+		if type(onLoad) == "function" then
+			onLoad()
+		end
 	end
 end
 
@@ -40,33 +60,38 @@ function moduleLoader.isModuleLoaded(name)
 end
 
 function moduleLoader.unloadModule(name)
-	local canUnload = moduleLoader.isModuleLoaded(name) and _modules[name].unload ~= nil
+	local canUnload = moduleLoader.isModuleLoaded(name) and type(_modules[name].onUnload) == "function"
 	if(canUnload) then
-		_modules[name].unload()
+		_modules[name].onUnload()
 	end
 	_modules[name] = nil
 	package.loaded["modules/" .. name] = nil
-	rawset(_G, name, unloadedModule)
+	--rawset(_G, name, unloadedModule)
 	print("Module unloaded: " .. name)
 end
 
-function moduleLoader.registerModuleUnload(name, func)
-	_modules[name].unload = func
+function moduleLoader.registerOnUnload(name, func)
+	_modules[name].onUnload = func
+end
+
+function moduleLoader.registerOnLoad(name, func)
+	_modules[name].onLoad = func
 end
 
 function moduleLoader.reload(name)
-	if moduleLoader.isModuleLoaded(name) then
-		moduleLoader.unloadModule(name)
-	end
+	moduleLoader.unloadModule(name)
 	return moduleLoader.loadModule(name)
 end
 
--- todo keep order of modules
 function moduleLoader.reloadAll()
 	print("Reloading all modules")
+	local modules = {}
 	for name, _ in pairs(_modules) do
-		moduleLoader.reload(name)
+		table.insert(modules, name)
+		moduleLoader.unloadModule(name)
 	end
+
+	moduleLoader.loadModules(modules)
 end
 
 return moduleLoader

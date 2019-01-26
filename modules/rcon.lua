@@ -15,6 +15,7 @@ local function sendAdminMsg(message)
 	for playerId, _ in pairs(admins) do
 		sendPlayerMsg(playerId, message, color.green)
 	end
+	utils.log("[admin] " .. message)
 end
 
 function rcon.loadModule(playerId, moduleName)
@@ -70,8 +71,15 @@ function rcon.removeAdmin(playerid)
 	end
 end
 
-moduleLoader.registerModuleUnload("rcon",
+moduleLoader.registerOnLoad("rcon",
 	function()
+		event.register("onPlayerLeft", rcon.removeAdmin)
+	end
+)
+
+moduleLoader.registerOnUnload("rcon",
+	function()
+		event.unregister("onPlayerLeft", rcon.removeAdmin)
 	end
 )
 

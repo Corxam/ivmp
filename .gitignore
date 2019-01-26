@@ -1,0 +1,8 @@
+*.zip
+*.exe
+*.dll
+*.DLLlo*
+*.da*
+lu
+*.LOG
+config.cfg

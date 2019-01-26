@@ -1,8 +1,7 @@
-local commands = {}
-
+local M = {}
 local commandMap = {}
 
-function commands.handle(playerId, text)
+function M.handle(playerId, text)
     local args = utils.split(text, " ")
     local command = table.remove(args, 1):sub(2)
     local func = commandMap[command]
@@ -13,7 +12,7 @@ function commands.handle(playerId, text)
     end
 end
 
-function commands.set(cmds, func)
+function M.set(cmds, func)
     if type(cmds) == "table" then
         for _, command in pairs(cmds) do
             commandMap[command] = func
@@ -23,7 +22,7 @@ function commands.set(cmds, func)
     end
 end
 
-commands.set({"h", "help", "?", "cmd", "commands"},
+M.set({"h", "help", "?", "cmd", "commands"},
     function(playerId, _)
         for cmd, _ in pairs(commandMap) do
             sendPlayerMsg(playerId, "/" .. cmd, color.info)
@@ -31,20 +30,20 @@ commands.set({"h", "help", "?", "cmd", "commands"},
     end
 )
 
-commands.set({"kill"},
+M.set({"kill"},
     function(playerId, _)
         setPlayeHealth(playerId, 0)
     end
 )
 
-commands.set({"speedboost", "sb"},
+M.set({"speedboost", "sb"},
     function(playerId, _)
         setPlayerKeyHook(playerId, 0x10, true)
     end
 )
 
 
-commands.set({"v", "veh", "vehicle", "car"},
+M.set({"v", "veh", "vehicle", "car"},
     function(playerId, args)
         local vehicle = args[1]
         local colors = {args[2],args[3],args[4],args[5]}
@@ -52,58 +51,58 @@ commands.set({"v", "veh", "vehicle", "car"},
     end
 )
 
-commands.set({"cobj"},
+M.set({"cobj"},
     function(playerId, args)
         player.spawnObject(playerId, {args[1],args[2],args[3],args[4],args[5],args[6],args[7],args[8]})
     end
 )
 
-commands.set({"ramp"},
+M.set({"ramp"},
     function(playerId, args)
         player.spawnRamp(playerId, args[1], args[2])
     end
 )
 
-commands.set({"tp", "teleport"},
+M.set({"tp", "teleport"},
     function(playerId, args)
         player.teleport(playerId, args[1], args[2], args[3])
     end
 )
 
-commands.set("rconlogin",
+M.set("rconlogin",
     function(playerId, args)
         local password = args[1]
         rcon.login(playerId, password)
     end
 )
 
-commands.set("kick",
+M.set("kick",
     function(playerId, args)
         local target = args[1]
         rcon.kick(playerId, target)
     end
 )
 
-commands.set({"loadmodule", "lm"},
+M.set({"loadmodule", "lm"},
     function(playerId, args)
         local module = args[1]
         rcon.loadModule(playerId, module)
     end
 )
 
-commands.set({"reloadall", "ra"},
+M.set({"reloadall", "ra"},
     function(playerId, _)
         rcon.reloadAllModules(playerId)
     end
 )
 
-commands.set("test",
+M.set("test",
     function(playerId, args)
-        player.test(playerId, args[1])
+        player.test(playerId, args[1], args[2], args[3], args[4], args[5], args[6])
     end
 )
 
-commands.set("skin",
+M.set("skin",
     function(playerId, args)
         rcon.checkAdmin(playerId,
             function()
@@ -114,4 +113,35 @@ commands.set("skin",
     end
 )
 
-return commands
+M.set({"gps", "pos"},
+    function(playerId, _)
+        local x, y, z = getPlayerPos(playerId)
+        local message = "x: " .. x .. " y: " .. y .. " z: " .. z
+        sendPlayerMsg(playerId, message, color.info)
+        utils.log(string.format("[POS] %s(%d): %.3f,%.3f,%.3f",  getPlayerName(playerId), playerId, x, y, z))
+    end
+)
+
+M.set("inspect",
+    function(playerId, _)
+        rcon.checkAdmin(playerId,
+            function()
+                print(inspect.inspect(_G))
+            end
+        )
+    end
+)
+
+moduleLoader.registerOnLoad("commands",
+    function()
+        event.register("onPlayerCommand", M.handle)
+    end
+)
+
+moduleLoader.registerOnUnload("commands",
+    function()
+        event.unregister("onPlayerCommand", M.handle)
+    end
+)
+
+return M

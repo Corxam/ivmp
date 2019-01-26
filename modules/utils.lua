@@ -18,6 +18,9 @@ function utils.stringToHash(s)
     return hash
 end
 
-
+function utils.log(text)
+	local time = os.date("*t")
+	print(("[%02d:%02d:%02d]"):format(time.hour, time.min, time.sec) .. " " .. text)
+end
 
 return utils
