@@ -57,7 +57,13 @@ function M.unregister(cmd)
 
 	local command = commands[cmd]
 	if command then
-		command[cmd] = nil
+        for _, alias in ipairs(command.aliases) do
+            aliasMap[alias] = nil
+            print("Unregistered alias for " .. cmd .. ": " .. alias)
+        end
+
+		commands[cmd] = nil
+        print("Unregistered command " .. cmd)
 	end
 end
 
