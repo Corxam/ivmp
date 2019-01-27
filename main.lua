@@ -20,6 +20,8 @@ local modulesToLoad = {
 
     -- game mode modules
     "rcon",
+    "timer",
+    "object",
     "player",
     "carSpawning",
     "weapons",
