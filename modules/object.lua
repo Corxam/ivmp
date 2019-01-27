@@ -19,6 +19,10 @@ function M.delete(objectId)
     deleteObject(objectId)
 end
 
+function M.move(objectId, x, y, z)
+    moveObject(objectId, x, y, z, 0, 0, 0, 1, 0)
+end
+
 local function deleteAll()
     for objectId, _ in pairs(objects) do
         M.delete(objectId)
@@ -26,16 +30,16 @@ local function deleteAll()
 end
 
 moduleLoader.registerOnLoad(string.sub(..., 9),
-        function()
-            -- add loading code here
-        end
+    function()
+        -- add loading code here
+    end
 )
 
 
 moduleLoader.registerOnUnload(string.sub(..., 9),
-        function()
-            deleteAll()
-        end
+    function()
+        deleteAll()
+    end
 )
 
 return M

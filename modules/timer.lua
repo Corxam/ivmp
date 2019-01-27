@@ -5,7 +5,7 @@ local id = 1
 function M.set(interval, repetitions, func)
     local timerId = id
     local timerCallback = "#timer" .. timerId
-    if not setTimer(timerCallback, repetitions, func) then
+    if not setTimer(timerCallback, interval, repetitions) then
         error("could not create timer " .. interval .. " " .. repetitions .. " " .. tostring(func))
     end
 
